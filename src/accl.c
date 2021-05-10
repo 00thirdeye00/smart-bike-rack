@@ -59,9 +59,9 @@ void accel_read(void){
 	static uint16_t i;
 	static us_count;
 
-//	static int16_t accel_x_old;
-//	static int16_t accel_y_old;
-//	static int16_t accel_z_old;
+	//	static int16_t accel_x_old;
+	//	static int16_t accel_y_old;
+	//	static int16_t accel_z_old;
 	static int16_t accel_x_new;
 	static int16_t accel_y_new;
 	static int16_t accel_z_new;
@@ -96,7 +96,7 @@ void accel_read(void){
 
 
 	if(curr_accl_state == USAFE_HIGH){ 
-		if(prev_accl_state == USAFE_HIGH)){
+		if(prev_accl_state == USAFE_HIGH){
 			us_count += 1;
 			if(us_count > 5){
 				//trigger alarm
@@ -110,7 +110,7 @@ void accel_read(void){
 	accel_data[X_DAT][i++] = accel_x_new;
 	//accel_y_old = accel_y_new;
 	//accel_z_old = accel_z_new;
-	
+
 	prev_accl_state = curr_accl_state;
 }
 
