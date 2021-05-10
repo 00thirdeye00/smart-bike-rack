@@ -14,24 +14,29 @@
 
 // X/Y/Z ranges to be confirmed
 #define SAFE			1	
-#define SAFE_HIG_RNG	15
-#define SAFE_LOW_RNG	30
-#define USAFE_LOW_RNG	45
-#define USAFE_HIG_RNG	60
+#define RNG_SAFE_HIGH	20
+#define RNG_SAFE_LOW	40
+#define RNG_USAFE_LOW	60
+#define RNG_USAFE_HIGH	80
 
+#define X_DAT	0
+#define Y_DAT	1
+#define Z_DAT	2
 
 static process_event_t xxx;
 static process_event_t detection_event;
 
-uint32_t	accel_data[3] = {0};	//[0]->x, [1]->y, [2]->z 
-uint8_t		err_acl_cnt = 0;
+uint8_t err_acl_cnt;
+uint32_t	accel_data[3][50] = {0};	//[0]->x, [1]->y, [2]->z 
 
 enum ACCEL_STATES {
-    SAFE_HIGH,
-    SAFE_LOW,
-    USAFE_LOW,
-    USAFE_HIGH,
+	SAFE_HIGH,
+	SAFE_LOW,
+	USAFE_LOW,
+	USAFE_HIGH,
 };
+
+ACCEL_STATES prev_accl_state, curr_accl_state;
 
 /* Declare our "main" process, the client process*/
 PROCESS(client_process, "detection client");
@@ -40,127 +45,159 @@ PROCESS(accel_process, "Accel process");
  * the node has booted. */
 AUTOSTART_PROCESSES(&client_process, &accel_process);
 
- 
-ACCEL_SAFE accel_state = SAFE_HIGH;
 
-/*
-void accel_read(accel_enum xyz_state){
-	    
-	static int16_t accel_x_old;
-	static int16_t accel_y_old;
-	static int16_t accel_z_old;
+accel_statee = SAFE_HIGH;
+
+/* function to return current state  */
+ACCEL_STATES current_state(void){
+	return curr_accl_state;
+}
+
+/* function to read accelerometer axis and change state  */
+void accel_read(void){
+
+	static uint16_t i;
+	static us_count;
+
+//	static int16_t accel_x_old;
+//	static int16_t accel_y_old;
+//	static int16_t accel_z_old;
 	static int16_t accel_x_new;
 	static int16_t accel_y_new;
 	static int16_t accel_z_new;
-//	static int16_t prev_accel;
+	//	static int16_t prev_accel;
 
-//	accel_state = SAFE_HIGH;
+	//	prev_accl_state = SAFE_HIGH;
 
 	accel_x_new = accm_read_axis(X_AXIS);
-    accel_y_new = accm_read_axis(Y_AXIS);
-    accel_z_new = accm_read_axis(Z_AXIS);	
-	
-        // READ X_AXIS TODO add y,z axis
+	//accel_y_new = accm_read_axis(Y_AXIS);
+	//accel_z_new = accm_read_axis(Z_AXIS);	
 
-	switch(xyz_state) {
-        case SAFE_HIGH:
-			if(	abs(accel_x_new > SAFE_HIG_RNG) || 
-				abs(accel_y_new > accel_y_old) ||
-				abs(accel_z_new > accel_z_old) ){ 	
-				
-				if( err_acl_cnt == 0) {
-					accel_state = safe_low;
-					// wait for timer interrupt 100 ms
-					etimer_set(&et, CLOCK_SECOND/100);
-					PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-					//accel_state(accel_state);
-				}
-				else {
-					err_acl_cnt = err_acl_cnt - 1;
-					// wait for timer interrupt 10 ms
-					etimer_set(&et, CLOCK_SECOND/10);
-					PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-				}
+	// READ X_AXIS TODO add y,z axis
+
+	if((accel_x_new > 0) && (accel_x_new <= RNG_SAFE_HIGH)){
+		if(err_acl_cnt > 0){
+			err_acl_cnt -= 1;
+		}
+		curr_accl_state = SAFE_HIGH;
+	}
+	else if((accel_x_new > RNG_SAFE_HIGH) && (accel_x_new <= RNG_SAFE_LOW)){
+		err_acl_cnt += 1;
+		curr_accl_state = SAFE_LOW;
+	}
+	else if((accel_x_new > RNG_SAFE_LOW) && (accel_x_new <= RNG_USAFE_LOW)){
+		err_acl_cnt += 1;
+		curr_accl_state = USAFE_LOW;
+	}
+	else if((accel_x_new > RNG_USAFE_LOW) && (accel_x_new <= RNG_USAFE_HIGH)){
+		err_acl_cnt += 1;
+		curr_accl_state = USAFE_HIGH;
+	}
+
+
+	if(curr_accl_state == USAFE_HIGH){ 
+		if(prev_accl_state == USAFE_HIGH)){
+			us_count += 1;
+			if(us_count > 5){
+				//trigger alarm
 			}
-            break;
-        case SAFE_HIGH: 
-            break;
-        case USAFE_LOW: 
-            break;
-        case USAFE_HIGH: 
-            break;
-		default:
-			accel_state = SAFE;
-			break;
-    }
-	accel_x_old = accel_x_new;
-	accel_y_old = accel_y_new;
-	accel_z_old = accel_z_new;
+		}
+		else{
+			us_count = 0;
+		}
+	}
+
+	accel_data[X_DAT][i++] = accel_x_new;
+	//accel_y_old = accel_y_new;
+	//accel_z_old = accel_z_new;
+	
+	prev_accl_state = curr_accl_state;
 }
-*/
+
+
+
+/*---------------------------------------------------------------------------*/
+/* accelerometer free fall detection callback */
+
+void
+accm_ff_cb(uint8_t reg){
+	leds_on(LEDS_BLUE);
+	process_post(&led_process, ledOff_event, NULL);
+	printf("~~[%u] Freefall detected! (0x%02X) -- ", ((uint16_t) clock_time())/128, reg);
+	print_int(reg);
+}
+
+/*---------------------------------------------------------------------------*/
+/* accelerometer tap and double tap detection callback */
+
+void
+accm_tap_cb(uint8_t reg){
+	process_post(&led_process, ledOff_event, NULL);
+	if(reg & ADXL345_INT_DOUBLETAP){
+		leds_on(LEDS_GREEN);
+		printf("~~[%u] DoubleTap detected! (0x%02X) -- ", ((uint16_t) clock_time())/128, reg);
+	} else {
+		leds_on(LEDS_RED);
+		printf("~~[%u] Tap detected! (0x%02X) -- ", ((uint16_t) clock_time())/128, reg);
+	}
+	print_int(reg);
+}
+
+/*---------------------------------------------------------------------------*/
+/* accelerometer process  */
+
 static struct etimer et;
 PROCESS_THREAD(accel_process, ev, data) {
-    PROCESS_BEGIN();
-   while (1) {
-        // READ X_AXIS TODO add y,z axis
-        accel_read = accm_read_axis(X_AXIS);
-        printf("x: %d\n", accel_read);
-        printf("prev_x: %d\n", prev_accel);
-        printf("state: %d\n", accel_state);
+	PROCESS_BEGIN();
+	{		
+		/* Start and setup the accelerometer with default values, eg no interrupts enabled. */
+		accm_init();
 
-        // TODO extend ACCEL_RANGE to include severel ranges
-        // TODO implement check of range as interrupt
-        if(abs(prev_accel - accel_read) > ACCEL_RANGE) {
-            if( err_acl_cnt == 0) {
-                accel_state = safe_low;
-                // wait for timer interrupt 100 ms
-                etimer_set(&et, CLOCK_SECOND/100);
-                PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-                //accel_state(accel_state);
-            }
-            else {
-                err_acl_cnt = err_acl_cnt - 1;
-                // wait for timer interrupt 10 ms
-                etimer_set(&et, CLOCK_SECOND/10);
-                PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-            }
-        }
-        else {
-            printf("OUTSIDE RANGE! \n");
-            if(err_acl_cnt >= 50 ){
-                process_post(&client_process, detection_event, NULL);
-                accel_state = unsafe_high;
-            }
-            else {
-                 etimer_set(&et, CLOCK_SECOND/10);
-                PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-                err_acl_cnt = err_acl_cnt + 1;
-                accel_data = accel_data + accel_read; 
-            }
-        }
-        prev_accel = accel_read;
-        }
-      PROCESS_END();
+		/* Register the callback functions for each interrupt */
+		ACCM_REGISTER_INT1_CB(accm_ff_cb);
+		ACCM_REGISTER_INT2_CB(accm_tap_cb);
+
+		while (1) {
+			// READ X_AXIS TODO add y,z axis
+			accel_read = accm_read_axis(X_AXIS);
+			printf("x: %d\n", accel_read);
+			printf("prev_x: %d\n", prev_accel);
+			printf("state: %d\n", prev_accl_state);
+
+			if(err_acl_cnt == 0){
+				accel_read();
+				etimer_set(&et, CLOCK_SECOND/100);
+				PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+			}
+			else if(err_acl_cnt > 0){
+				accel_read();
+				etimer_set(&et, CLOCK_SECOND/10);
+				PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+			}
+		}
+	}	
+	PROCESS_END();
 }
+
 /* Our main process. */
 PROCESS_THREAD(client_process, ev, data) {
 
-            PROCESS_BEGIN();
+	PROCESS_BEGIN();
 
-            accm_init();
+	accm_init();
 
-            /* Loop forever. */
-            while (1) {
-                    /* Wait until an event occurs. If the event has
-                     * occured, ev will hold the type of event, and
-                     * data will have additional information for the
-                     * event. In the case of a sensors_event, data will
-                     * point to the sensor that caused the event.
-                     * Here we wait until the button was pressed. */
-                    
+	/* Loop forever. */
+	while (1) {
+		/* Wait until an event occurs. If the event has
+		 * occured, ev will hold the type of event, and
+		 * data will have additional information for the
+		 * event. In the case of a sensors_event, data will
+		 * point to the sensor that caused the event.
+		 * Here we wait until the button was pressed. */
+
 		PROCESS_WAIT_EVENT_UNTIL( ev == detection_event ||
-                       (ev == sensors_event && data == &button_sensor));
-                printf("rx: detection event!! \n");
+				(ev == sensors_event && data == &button_sensor));
+		printf("rx: detection event!! \n");
 	}
 
 	PROCESS_END();
