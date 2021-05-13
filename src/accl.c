@@ -63,8 +63,8 @@ void accel_read(void){
 	//	static int16_t accel_y_old;
 	//	static int16_t accel_z_old;
 	static int16_t accel_x_new;
-	static int16_t accel_y_new;
-	static int16_t accel_z_new;
+	//static int16_t accel_y_new;
+	//static int16_t accel_z_new;
 	//	static int16_t prev_accel;
 
 	//	prev_accl_state = SAFE_HIGH;
@@ -156,6 +156,8 @@ PROCESS_THREAD(accel_process, ev, data) {
 		/* Register the callback functions for each interrupt */
 		ACCM_REGISTER_INT1_CB(accm_ff_cb);
 		ACCM_REGISTER_INT2_CB(accm_tap_cb);
+		
+		printf("before while accel process\n");
 
 		while (1) {
 			// READ X_AXIS TODO add y,z axis
@@ -174,31 +176,32 @@ PROCESS_THREAD(accel_process, ev, data) {
 				etimer_set(&et, CLOCK_SECOND/10);
 				PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 			}
+			printf("in while accel process\n");
 		}
 	}	
 	PROCESS_END();
 }
 
-/* Our main process. */
-PROCESS_THREAD(client_process, ev, data) {
-
-	PROCESS_BEGIN();
-
-	accm_init();
-
-	/* Loop forever. */
-	while (1) {
-		/* Wait until an event occurs. If the event has
-		 * occured, ev will hold the type of event, and
-		 * data will have additional information for the
-		 * event. In the case of a sensors_event, data will
-		 * point to the sensor that caused the event.
-		 * Here we wait until the button was pressed. */
-
-		PROCESS_WAIT_EVENT_UNTIL( ev == detection_event ||
-				(ev == sensors_event && data == &button_sensor));
-		printf("rx: detection event!! \n");
-	}
-
-	PROCESS_END();
-}
+///* Our main process. */
+//PROCESS_THREAD(client_process, ev, data) {
+//
+//	PROCESS_BEGIN();
+//
+//	accm_init();
+//
+//	/* Loop forever. */
+//	while (1) {
+//		/* Wait until an event occurs. If the event has
+//		 * occured, ev will hold the type of event, and
+//		 * data will have additional information for the
+//		 * event. In the case of a sensors_event, data will
+//		 * point to the sensor that caused the event.
+//		 * Here we wait until the button was pressed. */
+//
+//		PROCESS_WAIT_EVENT_UNTIL( ev == detection_event ||
+//				(ev == sensors_event && data == &button_sensor));
+//		printf("rx: detection event!! \n");
+//	}
+//
+//	PROCESS_END();
+//}
