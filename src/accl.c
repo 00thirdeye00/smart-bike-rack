@@ -1,3 +1,6 @@
+/* accl.c  */
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -7,6 +10,7 @@
 #include "net/netstack.h"
 #include "net/nullnet/nullnet.h"
 #include "dev/adxl345.h"
+#include "accl.h"
 
 
 #define ACCM_READ_INTERVAL CLOCK_SECOND/100
@@ -29,12 +33,12 @@ static process_event_t detection_event;
 uint8_t err_acl_cnt;
 uint32_t	accel_data[3][50] = {0};	//[0]->x, [1]->y, [2]->z 
 
-enum ACCEL_STATES {
-	SAFE_HIGH,
-	SAFE_LOW,
-	USAFE_LOW,
-	USAFE_HIGH,
-};
+//enum ACCEL_STATES {
+//	SAFE_HIGH,
+//	SAFE_LOW,
+//	USAFE_LOW,
+//	USAFE_HIGH,
+//};
 
 ACCEL_STATES prev_accl_state, curr_accl_state;
 
@@ -107,13 +111,18 @@ void accel_read(void){
 		}
 	}
 
-	accel_data[X_DAT][i++] = accel_x_new;
-	//accel_y_old = accel_y_new;
-	//accel_z_old = accel_z_new;
+	if(i == 60){
+		i %= 60;
+		//adding x axis data to 2d data buffer
+		accel_data[X_DAT][i++] = accel_x_new;
+		
 
+		//accel_y_old = accel_y_new;
+		//accel_z_old = accel_z_new;
+	}
 	prev_accl_state = curr_accl_state;
-}
 
+}
 
 
 /*---------------------------------------------------------------------------*/
@@ -161,18 +170,18 @@ PROCESS_THREAD(accel_process, ev, data) {
 
 		while (1) {
 			// READ X_AXIS TODO add y,z axis
-			accel_read = accm_read_axis(X_AXIS);
+			accel_read();
 			printf("x: %d\n", accel_read);
 			printf("prev_x: %d\n", prev_accel);
 			printf("state: %d\n", prev_accl_state);
 
 			if(err_acl_cnt == 0){
-				accel_read();
+				//accel_read();
 				etimer_set(&et, CLOCK_SECOND/100);
 				PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 			}
 			else if(err_acl_cnt > 0){
-				accel_read();
+				//accel_read();
 				etimer_set(&et, CLOCK_SECOND/10);
 				PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 			}
@@ -182,26 +191,3 @@ PROCESS_THREAD(accel_process, ev, data) {
 	PROCESS_END();
 }
 
-///* Our main process. */
-//PROCESS_THREAD(client_process, ev, data) {
-//
-//	PROCESS_BEGIN();
-//
-//	accm_init();
-//
-//	/* Loop forever. */
-//	while (1) {
-//		/* Wait until an event occurs. If the event has
-//		 * occured, ev will hold the type of event, and
-//		 * data will have additional information for the
-//		 * event. In the case of a sensors_event, data will
-//		 * point to the sensor that caused the event.
-//		 * Here we wait until the button was pressed. */
-//
-//		PROCESS_WAIT_EVENT_UNTIL( ev == detection_event ||
-//				(ev == sensors_event && data == &button_sensor));
-//		printf("rx: detection event!! \n");
-//	}
-//
-//	PROCESS_END();
-//}
