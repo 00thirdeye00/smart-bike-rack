@@ -27,11 +27,10 @@
 #define Y_DAT	1
 #define Z_DAT	2
 
-static process_event_t xxx;
-static process_event_t detection_event;
+//static process_event_t xxx;
 
-uint8_t err_acl_cnt;
-uint32_t	accel_data[3][50] = {0};	//[0]->x, [1]->y, [2]->z 
+uint8_t	err_acl_cnt;
+uint32_t accel_data[3][50] = {{0}};	//[0]->x, [1]->y, [2]->z 
 
 //enum ACCEL_STATES {
 //	SAFE_HIGH,
@@ -43,14 +42,14 @@ uint32_t	accel_data[3][50] = {0};	//[0]->x, [1]->y, [2]->z
 ACCEL_STATES prev_accl_state, curr_accl_state;
 
 /* Declare our "main" process, the client process*/
-PROCESS(client_process, "detection client");
 PROCESS(accel_process, "Accel process");
 /* The client process should be started automatically when
  * the node has booted. */
-AUTOSTART_PROCESSES(&client_process, &accel_process);
+
+//AUTOSTART_PROCESSES(&accel_process);
 
 
-accel_statee = SAFE_HIGH;
+ACCEL_STATES accel_state = SAFE_HIGH;
 
 /* function to return current state  */
 ACCEL_STATES current_state(void){
@@ -61,7 +60,7 @@ ACCEL_STATES current_state(void){
 void accel_read(void){
 
 	static uint16_t i;
-	static us_count;
+	static uint16_t us_count;
 
 	//	static int16_t accel_x_old;
 	//	static int16_t accel_y_old;
@@ -127,30 +126,30 @@ void accel_read(void){
 
 /*---------------------------------------------------------------------------*/
 /* accelerometer free fall detection callback */
-
-void
-accm_ff_cb(uint8_t reg){
-	leds_on(LEDS_BLUE);
-	process_post(&led_process, ledOff_event, NULL);
-	printf("~~[%u] Freefall detected! (0x%02X) -- ", ((uint16_t) clock_time())/128, reg);
-	print_int(reg);
-}
-
-/*---------------------------------------------------------------------------*/
-/* accelerometer tap and double tap detection callback */
-
-void
-accm_tap_cb(uint8_t reg){
-	process_post(&led_process, ledOff_event, NULL);
-	if(reg & ADXL345_INT_DOUBLETAP){
-		leds_on(LEDS_GREEN);
-		printf("~~[%u] DoubleTap detected! (0x%02X) -- ", ((uint16_t) clock_time())/128, reg);
-	} else {
-		leds_on(LEDS_RED);
-		printf("~~[%u] Tap detected! (0x%02X) -- ", ((uint16_t) clock_time())/128, reg);
-	}
-	print_int(reg);
-}
+//
+//void
+//accm_ff_cb(uint8_t reg){
+//	leds_on(LEDS_BLUE);
+//	process_post(&led_process, ledOff_event, NULL);
+//	printf("~~[%u] Freefall detected! (0x%02X) -- ", ((uint16_t) clock_time())/128, reg);
+//	print_int(reg);
+//}
+//
+///*---------------------------------------------------------------------------*/
+///* accelerometer tap and double tap detection callback */
+//
+//void
+//accm_tap_cb(uint8_t reg){
+//	process_post(&led_process, ledOff_event, NULL);
+//	if(reg & ADXL345_INT_DOUBLETAP){
+//		leds_on(LEDS_GREEN);
+//		printf("~~[%u] DoubleTap detected! (0x%02X) -- ", ((uint16_t) clock_time())/128, reg);
+//	} else {
+//		leds_on(LEDS_RED);
+//		printf("~~[%u] Tap detected! (0x%02X) -- ", ((uint16_t) clock_time())/128, reg);
+//	}
+//	print_int(reg);
+//}
 
 /*---------------------------------------------------------------------------*/
 /* accelerometer process  */
@@ -159,21 +158,23 @@ static struct etimer et;
 PROCESS_THREAD(accel_process, ev, data) {
 	PROCESS_BEGIN();
 	{		
+
 		/* Start and setup the accelerometer with default values, eg no interrupts enabled. */
-		accm_init();
+		//accm_init();
 
 		/* Register the callback functions for each interrupt */
-		ACCM_REGISTER_INT1_CB(accm_ff_cb);
-		ACCM_REGISTER_INT2_CB(accm_tap_cb);
+//		ACCM_REGISTER_INT1_CB(accm_ff_cb);
+//		ACCM_REGISTER_INT2_CB(accm_tap_cb);
 		
 		printf("before while accel process\n");
 
 		while (1) {
 			// READ X_AXIS TODO add y,z axis
 			accel_read();
-			printf("x: %d\n", accel_read);
-			printf("prev_x: %d\n", prev_accel);
-			printf("state: %d\n", prev_accl_state);
+			
+		//	printf("x: %d\n", accel_read);
+		//	printf("prev_x: %d\n", prev_accel);
+		//	printf("state: %d\n", prev_accl_state);
 
 			if(err_acl_cnt == 0){
 				//accel_read();

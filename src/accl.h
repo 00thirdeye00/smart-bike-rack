@@ -6,12 +6,12 @@
 
 
 /* accelerometer states  */
-enum ACCEL_STATES {
+typedef enum accel_states {
 	SAFE_HIGH,
 	SAFE_LOW,
 	USAFE_LOW,
 	USAFE_HIGH,
-};
+}ACCEL_STATES;
 
 
 /* function to return current accelerometer state  */
