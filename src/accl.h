@@ -2,15 +2,15 @@
 #ifndef ACCL_H
 #define ACCL_H
 
-
+PROCESS_NAME(accel_process);
 
 
 /* accelerometer states  */
 typedef enum accel_states {
 	SAFE_HIGH,
 	SAFE_LOW,
-	USAFE_LOW,
-	USAFE_HIGH,
+	UNSAFE_LOW,
+	UNSAFE_HIGH
 }ACCEL_STATES;
 
 

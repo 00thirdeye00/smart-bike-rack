@@ -3,13 +3,11 @@
 #MAKE_MAC = MAKE_MAC_CSMA
 #MAKE_NET = MAKE_NET_NULLNET
 
-CONTIKI_PROJECT = accl login
-APPS=serial-shell
-
+CONTIKI_PROJECT = observer login
+PROJECT_SOURCEFILES += accl.c dist.c
 all: $(CONTIKI_PROJECT)
 
 CONTIKI = /home/wcnes/contiki-ng-wcnes
-include $(CONTIKI)/Makefile.include
 
 # ----- below copied from timesync-demo example ---- 
 #PLATFORMS_EXCLUDE = sky nrf52dk native

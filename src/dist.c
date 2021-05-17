@@ -12,7 +12,7 @@
 #include "dist.h"
 
 #define ACCM_READ_INTERVAL CLOCK_SECOND/100
-#define DIST_RANGE 1000
+#define DIST_RANGE 700
 
 
 static int64_t dist_data;
@@ -30,13 +30,11 @@ DIST_STATES current_state_dist(void){
 
 void dist_read(void) {
     static int16_t dist_read;
-    // static int16_t prev_dist;
 
     dist_read = phidgets.value(PHIDGET5V_2);
-    printf("dist_read: %u \n",dist_read);
+    //printf("dist_read: %d \n", dist_read);
 
-    // TODO should prev_dist be compared with the current read?
-    if( dist_read  > DIST_RANGE ) {
+    if( dist_read  < DIST_RANGE ) {
         if(err_dist_cnt == 0) {
             dist_state = UNDETECTED;
         } 
@@ -51,12 +49,12 @@ void dist_read(void) {
         }
     }
     dist_data = dist_data + dist_read;
-    // prev_dist = dist_read;
 }
 
 static struct etimer et_dist;
 PROCESS_THREAD(dist_process, ev, data) {
     PROCESS_BEGIN();
+    SENSORS_ACTIVATE(phidgets);
     while (1) {
 
     dist_read();

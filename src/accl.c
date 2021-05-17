@@ -11,6 +11,7 @@
 #include "net/nullnet/nullnet.h"
 #include "dev/adxl345.h"
 #include "accl.h"
+#include "alarm.h"
 
 
 #define ACCM_READ_INTERVAL CLOCK_SECOND/100
@@ -20,8 +21,8 @@
 #define SAFE			1	
 #define RNG_SAFE_HIGH	20
 #define RNG_SAFE_LOW	40
-#define RNG_USAFE_LOW	60
-#define RNG_USAFE_HIGH	80
+#define RNG_UNSAFE_LOW	60
+#define RNG_UNSAFE_HIGH	80
 
 #define X_DAT	0
 #define Y_DAT	1
@@ -60,7 +61,6 @@ ACCEL_STATES current_state(void){
 void accel_read(void){
 
 	static uint16_t i;
-	static uint16_t us_count;
 
 	//	static int16_t accel_x_old;
 	//	static int16_t accel_y_old;
@@ -88,26 +88,13 @@ void accel_read(void){
 		err_acl_cnt += 1;
 		curr_accl_state = SAFE_LOW;
 	}
-	else if((accel_x_new > RNG_SAFE_LOW) && (accel_x_new <= RNG_USAFE_LOW)){
+	else if((accel_x_new > RNG_SAFE_LOW) && (accel_x_new <= RNG_UNSAFE_LOW)){
 		err_acl_cnt += 1;
-		curr_accl_state = USAFE_LOW;
+		curr_accl_state = UNSAFE_LOW;
 	}
-	else if((accel_x_new > RNG_USAFE_LOW) && (accel_x_new <= RNG_USAFE_HIGH)){
+	else if((accel_x_new > RNG_UNSAFE_LOW) && (accel_x_new <= RNG_UNSAFE_HIGH)){
 		err_acl_cnt += 1;
-		curr_accl_state = USAFE_HIGH;
-	}
-
-
-	if(curr_accl_state == USAFE_HIGH){ 
-		if(prev_accl_state == USAFE_HIGH){
-			us_count += 1;
-			if(us_count > 5){
-				//trigger alarm
-			}
-		}
-		else{
-			us_count = 0;
-		}
+		curr_accl_state = UNSAFE_HIGH;
 	}
 
 	if(i == 60){
@@ -166,7 +153,6 @@ PROCESS_THREAD(accel_process, ev, data) {
 //		ACCM_REGISTER_INT1_CB(accm_ff_cb);
 //		ACCM_REGISTER_INT2_CB(accm_tap_cb);
 		
-		printf("before while accel process\n");
 
 		while (1) {
 			// READ X_AXIS TODO add y,z axis
@@ -186,7 +172,6 @@ PROCESS_THREAD(accel_process, ev, data) {
 				etimer_set(&et, CLOCK_SECOND/10);
 				PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 			}
-			printf("in while accel process\n");
 		}
 	}	
 	PROCESS_END();
