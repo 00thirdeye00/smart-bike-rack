@@ -16,7 +16,7 @@ typedef enum accel_states {
 
 /* function to return current accelerometer state  */
 ACCEL_STATES current_state(void);
-
+uint16_t accel_data_avg(void);
 
 
 

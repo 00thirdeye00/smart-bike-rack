@@ -19,10 +19,10 @@
 
 // X/Y/Z ranges to be confirmed
 #define SAFE			1	
-#define RNG_SAFE_HIGH	20
-#define RNG_SAFE_LOW	40
-#define RNG_UNSAFE_LOW	60
-#define RNG_UNSAFE_HIGH	80
+#define RNG_SAFE_HIGH	10
+#define RNG_SAFE_LOW	20
+#define RNG_UNSAFE_LOW	30
+#define RNG_UNSAFE_HIGH	40
 
 #define X_DAT	0
 #define Y_DAT	1
@@ -33,14 +33,8 @@
 uint8_t	err_acl_cnt;
 uint32_t accel_data[3][50] = {{0}};	//[0]->x, [1]->y, [2]->z 
 
-//enum ACCEL_STATES {
-//	SAFE_HIGH,
-//	SAFE_LOW,
-//	USAFE_LOW,
-//	USAFE_HIGH,
-//};
 
-ACCEL_STATES prev_accl_state, curr_accl_state;
+static ACCEL_STATES curr_accl_state; //prev_accl_state
 
 /* Declare our "main" process, the client process*/
 PROCESS(accel_process, "Accel process");
@@ -72,7 +66,7 @@ void accel_read(void){
 
 	//	prev_accl_state = SAFE_HIGH;
 
-	accel_x_new = accm_read_axis(X_AXIS);
+	accel_x_new = abs(accm_read_axis(X_AXIS));
 	//accel_y_new = accm_read_axis(Y_AXIS);
 	//accel_z_new = accm_read_axis(Z_AXIS);	
 
@@ -101,44 +95,24 @@ void accel_read(void){
 		i %= 60;
 		//adding x axis data to 2d data buffer
 		accel_data[X_DAT][i++] = accel_x_new;
-		
+
 
 		//accel_y_old = accel_y_new;
 		//accel_z_old = accel_z_new;
 	}
-	prev_accl_state = curr_accl_state;
+	//prev_accl_state = curr_accl_state;
 
 }
 
+uint16_t accel_data_avg(void){
+	uint16_t accel_avg = 0;
+	int i;
+	for(i = 0; i < sizeof(accel_data[X_DAT]); i++){
+		accel_avg += accel_data[X_DAT][i]; 
+	}
+	return accel_avg/60;
+}
 
-/*---------------------------------------------------------------------------*/
-/* accelerometer free fall detection callback */
-//
-//void
-//accm_ff_cb(uint8_t reg){
-//	leds_on(LEDS_BLUE);
-//	process_post(&led_process, ledOff_event, NULL);
-//	printf("~~[%u] Freefall detected! (0x%02X) -- ", ((uint16_t) clock_time())/128, reg);
-//	print_int(reg);
-//}
-//
-///*---------------------------------------------------------------------------*/
-///* accelerometer tap and double tap detection callback */
-//
-//void
-//accm_tap_cb(uint8_t reg){
-//	process_post(&led_process, ledOff_event, NULL);
-//	if(reg & ADXL345_INT_DOUBLETAP){
-//		leds_on(LEDS_GREEN);
-//		printf("~~[%u] DoubleTap detected! (0x%02X) -- ", ((uint16_t) clock_time())/128, reg);
-//	} else {
-//		leds_on(LEDS_RED);
-//		printf("~~[%u] Tap detected! (0x%02X) -- ", ((uint16_t) clock_time())/128, reg);
-//	}
-//	print_int(reg);
-//}
-
-/*---------------------------------------------------------------------------*/
 /* accelerometer process  */
 
 static struct etimer et;
@@ -149,27 +123,23 @@ PROCESS_THREAD(accel_process, ev, data) {
 		/* Start and setup the accelerometer with default values, eg no interrupts enabled. */
 		//accm_init();
 
-		/* Register the callback functions for each interrupt */
-//		ACCM_REGISTER_INT1_CB(accm_ff_cb);
-//		ACCM_REGISTER_INT2_CB(accm_tap_cb);
-		
 
 		while (1) {
 			// READ X_AXIS TODO add y,z axis
 			accel_read();
-			
-		//	printf("x: %d\n", accel_read);
-		//	printf("prev_x: %d\n", prev_accel);
-		//	printf("state: %d\n", prev_accl_state);
+
+			//	printf("x: %d\n", accel_read);
+			//	printf("prev_x: %d\n", prev_accel);
+			//	printf("state: %d\n", prev_accl_state);
 
 			if(err_acl_cnt == 0){
 				//accel_read();
-				etimer_set(&et, CLOCK_SECOND/100);
+				etimer_set(&et, CLOCK_SECOND/10);
 				PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 			}
 			else if(err_acl_cnt > 0){
 				//accel_read();
-				etimer_set(&et, CLOCK_SECOND/10);
+				etimer_set(&et, CLOCK_SECOND/100);
 				PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 			}
 		}

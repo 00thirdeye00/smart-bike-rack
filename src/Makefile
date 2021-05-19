@@ -4,7 +4,7 @@
 #MAKE_NET = MAKE_NET_NULLNET
 
 CONTIKI_PROJECT = observer login
-PROJECT_SOURCEFILES += accl.c dist.c
+PROJECT_SOURCEFILES += accl.c dist.c #alarm.c
 all: $(CONTIKI_PROJECT)
 
 CONTIKI = /home/wcnes/contiki-ng-wcnes
