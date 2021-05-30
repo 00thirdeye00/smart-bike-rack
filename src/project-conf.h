@@ -68,6 +68,23 @@
 #endif /* WITH_SECURITY */
 
 /*******************************************************/
+/************ Configure Border-Router ******************/
+/*******************************************************/
+
+#ifndef WEBSERVER_CONF_CFS_CONNS
+#define WEBSERVER_CONF_CFS_CONNS 2
+#endif
+
+#ifndef BORDER_ROUTER_CONF_WEBSERVER
+#define BORDER_ROUTER_CONF_WEBSERVER 1
+#endif
+
+#if BORDER_ROUTER_CONF_WEBSERVER
+#define UIP_CONF_TCP 1
+#endif
+
+
+/*******************************************************/
 /************* Other system configuration **************/
 /*******************************************************/
 

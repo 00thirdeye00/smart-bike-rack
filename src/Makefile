@@ -30,4 +30,12 @@ ifeq ($(MAKE_WITH_SECURITY),1)
 CFLAGS += -DWITH_SECURITY=1
 endif
 
+#border-router
+# Include webserver module
+MODULES_REL += webserver
+# Include optional target-specific module
+include $(CONTIKI)/Makefile.identify-target
+MODULES_REL += $(TARGET)
+
+
 include $(CONTIKI)/Makefile.include

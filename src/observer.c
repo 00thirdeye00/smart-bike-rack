@@ -65,6 +65,7 @@ struct Data_pkt
 
 /* Declare our "main"/"observer" process, the client process*/
 PROCESS(obs_process, "Observer process");
+
 /* The observer process should be started automatically when
  * the node has booted. */
 AUTOSTART_PROCESSES(&dist_process, &accel_process, &obs_process);
@@ -82,17 +83,26 @@ udp_rx_callback(struct simple_udp_connection *c,
 	uint64_t local_time_clock_ticks = tsch_get_network_uptime_ticks();
 	//uint64_t remote_time_clock_ticks;
 	struct Data_pkt data_rx;
+	
+	uint16_t rssi_rcv_pkt = packetbuf_attr(PACKETBUF_ATTR_RSSI);
+	uint16_t lqi_rcv_pkt = packetbuf_attr(PACKETBUF_LINK_QUALITY);
 
 	memcpy(&data_rx, data, sizeof(struct Data_pkt));
-	LOG_INFO("Received from ");
+	LOG_INFO("Received from:\t\t ");
 	LOG_INFO_6ADDR(sender_addr);
+	printf("RSSI from received packet:\t\t%d\n", rssi_rcv_pkt);
+	printf("LQI from received packet:\t\t%d\n", lqi_rcv_pkt);
 	LOG_INFO(" \n");
-	printf("data received: %d at time: %lu \n", (int)data_rx.state_accl, (unsigned long)(local_time_clock_ticks - data_rx.timestamp));
-	printf("dist_state rx: %d \n", (int)data_rx.state_dist);
+	printf("data received:\t\t%d at time:\t\t%lu \n", (int)data_rx.state_accl, (unsigned long)(local_time_clock_ticks - data_rx.timestamp));
+	printf("dist_state rx:\t\t%d \n", (int)data_rx.state_dist);
 }
 /*---------------------------------------------------------------------------*/
+void route_to_root(void){
+	
+}
 
 
+/*-------check accelerometer state-----*/
 void check_accl_state(void) {
 	static uint16_t us_count = 0;    
 
@@ -117,6 +127,7 @@ void check_accl_state(void) {
 }
 
 
+/*----------send data to root------------------*/
 void send_to_root(void){
 
 	struct Data_pkt data_tx;
@@ -158,7 +169,6 @@ void send_to_root(void){
 
 
 /*---------------------------------------------------------------------------*/
-
 /* Observer process  */
 PROCESS_THREAD(obs_process, ev, data) {
 
@@ -193,6 +203,12 @@ PROCESS_THREAD(obs_process, ev, data) {
 
 	/* log data function TBD  */
 	//log_data();
+
+#if BORDER_ROUTER_CONF_WEBSERVER
+	PROCESS_NAME(webserver_nogui_process);
+	process_start(&webserver_nogui_process, NULL);
+#endif /* BORDER_ROUTER_CONF_WEBSERVER */
+
 
 	/* Loop forever. */
 	while (1) {
@@ -242,3 +258,5 @@ PROCESS_THREAD(obs_process, ev, data) {
 
 	PROCESS_END();
 }
+
+
