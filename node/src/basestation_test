@@ -1,0 +1,71 @@
+using saved target 'z1'
+rlwrap /home/wcnes/contiki-ng-wcnes/tools/serial-io/serialdump -b115200 /dev/ttyUSB0
+rlwrap: warning: Owner of /home/wcnes/.serialdump_history and your effective UID don't match. History will be read-only
+
+warnings can be silenced by the --no-warnings (-n) option
+connecting to /dev/ttyUSB0 [OK]
+�[INFO: App       ] Received from:{{fd00::c30c:0:0:66}}
+응RSSI from received packet:{{-49}}
+응LQI  from received packet:{{0}}
+응accl_state rx            :{{2}}
+응dist_state rx            :{{0}}
+응rx at time:{{10627}} and packet timestamp:{{10618}}
+응
+응[INFO: App       ] Received from:{{fd00::c30c:0:0:66}}
+응RSSI from received packet:{{-48}}
+응LQI  from received packet:{{0}}
+응accl_state rx            :{{2}}
+응dist_state rx            :{{0}}
+응rx at time:{{11281}} and packet timestamp:{{11270}}
+응
+응[INFO: App       ] Received from:{{fd00::c30c:0:0:66}}
+응RSSI from received packet:{{-53}}
+응LQI  from received packet:{{0}}
+응accl_state rx            :{{2}}
+응dist_state rx            :{{0}}
+응rx at time:{{11935}} and packet timestamp:{{11918}}
+응
+응[INFO: App       ] Received from:{{fd00::c30c:0:0:66}}
+응RSSI from received packet:{{-50}}
+응LQI  from received packet:{{0}}
+응accl_state rx            :{{2}}
+응dist_state rx            :{{0}}
+응rx at time:{{12588}} and packet timestamp:{{12569}}
+응
+응[INFO: App       ] Received from:{{fd00::c30c:0:0:66}}
+응RSSI from received packet:{{-47}}
+응LQI  from received packet:{{0}}
+응accl_state rx            :{{2}}
+응dist_state rx            :{{0}}
+응rx at time:{{13223}} and packet timestamp:{{13219}}
+응
+응[INFO: App       ] Received from:{{fd00::c30c:0:0:66}}
+응RSSI from received packet:{{-47}}
+응LQI  from received packet:{{0}}
+응accl_state rx            :{{2}}
+응dist_state rx            :{{0}}
+응rx at time:{{13875}} and packet timestamp:{{13868}}
+응
+응[INFO: App       ] Received from:{{fd00::c30c:0:0:66}}
+응RSSI from received packet:{{-50}}
+응LQI  from received packet:{{0}}
+응accl_state rx            :{{2}}
+응dist_state rx            :{{0}}
+응rx at time:{{14529}} and packet timestamp:{{14519}}
+응
+응[INFO: App       ] Received from:{{fd00::c30c:0:0:66}}
+응RSSI from received packet:{{-47}}
+응LQI  from received packet:{{0}}
+응accl_state rx            :{{2}}
+응dist_state rx            :{{0}}
+응rx at time:{{15183}} and packet timestamp:{{15168}}
+응
+응[INFO: App       ] Received from:{{fd00::c30c:0:0:66}}
+응RSSI from received packet:{{-48}}
+응LQI  from received packet:{{0}}
+응accl_state rx            :{{2}}
+응dist_state rx            :{{0}}
+응rx at time:{{15836}} and packet timestamp:{{15818}}
+응
+응[WARN: TSCH      ] ! drop dup ll from c10c.0000.0000.0066 seqno 185
+�
